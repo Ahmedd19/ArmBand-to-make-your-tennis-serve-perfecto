@@ -1,0 +1,81 @@
+In our project circuit we used 2 sensors the angle sensor to calculate the perfect angular velocity (Tilt) & Pressure sensor (FSR) to calculate the pressure of the serve.
+So there's a unique conditions to obtain the perfect serve so in our circuit we add a buzzer & LED light if the condition of the perfect serve happens the LED will light indcate that it's perfect
+Our arduino IDE code uses the 2 sensors:
+
+// MPU-6050 Short Example Sketch
+// By Arduino User JohnChi
+// August 17, 2014
+// Public Domain
+#include<Wire.h>
+#define fsrpin A0
+const int MPU_addr=0x68;  // I2C address of the MPU-6050
+int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
+int fsrreading; //Variable to store FSR value
+int led=13;
+float X=0;
+float V=0;
+//float thetta=0;
+
+void setup(){
+  Wire.begin();
+  Wire.beginTransmission(MPU_addr);
+  Wire.write(0x6B);  // PWR_MGMT_1 register
+  Wire.write(0);     // set to zero (wakes up the MPU-6050)
+  Wire.endTransmission(true);
+  Serial.begin(9600);
+}
+void loop(){
+  // Read the FSR pin and store the output as fsrreading:
+  fsrreading = analogRead(fsrpin);
+  pinMode(led,OUTPUT);
+
+  // Print the fsrreading in the serial monitor:
+  // Print the string "Analog reading = ".
+  Serial.print("reading = ");
+  // Print the fsrreading:
+  Serial.print(fsrreading);
+
+  Wire.beginTransmission(MPU_addr);
+  Wire.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
+  Wire.endTransmission(false);
+  Wire.requestFrom(MPU_addr,14,true);  // request a total of 14 registers
+  AcX=Wire.read()<<8|Wire.read();  // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)    
+  AcY=Wire.read()<<8|Wire.read();  // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
+  AcZ=Wire.read()<<8|Wire.read();  // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
+  Tmp=Wire.read()<<8|Wire.read();  // 0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
+  GyX=Wire.read()<<8|Wire.read();  // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
+  GyY=Wire.read()<<8|Wire.read();  // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
+  GyZ=Wire.read()<<8|Wire.read();  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
+  
+  Serial.print("AcX = "); Serial.print(AcX);
+  Serial.print(" | AcY = "); Serial.print(AcY);
+  //Serial.print(" | AcZ = "); Serial.print(AcZ);
+  Serial.print(" | Tmp = "); Serial.print(Tmp/340.00+36.53);  //equation for temperature in degrees C from datasheet
+  Serial.print(" | GyX = "); Serial.print(GyX);
+  Serial.print(" | GyY = "); Serial.print(GyY);
+  //Serial.print(" | GyZ = "); Serial.println(GyZ);
+ //X=sqrt(pow(AcX,2)+pow(AcY,2));
+ V=sqrt(pow(GyX,2)+pow(GyY,2));
+//float L=((AcX*GyX)+(AcY*GyY)/(X*V));
+Serial.print(" Angular Velocity = "); Serial.print(V);
+Serial.println(" Rad/Sec ");
+if (fsrreading < 10) {
+    Serial.print(" - No pressure ");
+    digitalWrite(led,LOW);
+  } else if (fsrreading < 500) {
+    Serial.print("- Light squeeze ");
+    digitalWrite(led,LOW);
+  } else if (fsrreading < 800) {
+    Serial.print("- Medium squeeze ");
+    digitalWrite(led,LOW);
+  } else if (fsrreading > 800 and V > 1000){ // for perfect serve 
+    Serial.print("- perfect Serve ");
+    digitalWrite(led,HIGH);
+  }
+  else if (fsrreading > 800 ){ // for perfect serve 
+    Serial.print("- High Pressure ");
+    digitalWrite(led,LOW);
+  }
+  
+  delay(1000);
+}
