@@ -1,0 +1,2 @@
+In our project circuit we used 2 sensors the angle sensor to calculate the perfect angular velocity (Tilt) & Pressure sensor (FSR) to calculate the pressure of the serve.
+So there's a unique conditions to obtain the perfect serve so in our circuit we add a buzzer & LED light if the condition of the perfect serve happens the LED will light indcate that it's perfect
